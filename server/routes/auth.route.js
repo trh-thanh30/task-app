@@ -99,6 +99,8 @@ router.get("/api/get-users", authenticateToken, async (req, res) => {
         createdOn: isUser.createdOn,
       },
     });
-  } catch (error) {}
+  } catch (error) {
+    res.status(400).json({ error: true, message: error.message });
+  }
 });
 module.exports = router;

@@ -1,12 +1,14 @@
-import Navbar from "../components/Navbar";
-import { Link } from "react-router-dom";
+
+import { Link, useNavigate } from "react-router-dom";
 import PasswordInput from "../components/PasswordInput";
 import { useState } from "react";
 import { validateEmail } from "../utils/helper";
+import axiosInstance from "../utils/axiosInstance";
 export default function Signin() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const handelSubmit = async (e) => {
     e.preventDefault();
     if (!validateEmail(email)) {
@@ -18,12 +20,26 @@ export default function Signin() {
       return;
     }
     setError("");
+    try {
+      const res = await axiosInstance.post("/auth/api/login", {
+        email: email,
+        password: password,
+      });
+      if (res.data && res.data.accessToken) {
+        localStorage.setItem("token", res.data.accessToken);
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      if (error.res && error.res.data && error.res.data.message) {
+        setError(error.res.data.message);
+      } else {
+        setError("An unexpected error occurred. Please try agian");
+      }
+    }
   };
-  console.log(error);
+
   return (
     <>
-      <Navbar></Navbar>
-
       <div className="flex items-center justify-center mt-28">
         <div className="py-10 bg-white border rounded w-96 px-7">
           <form onSubmit={handelSubmit}>

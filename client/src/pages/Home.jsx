@@ -3,17 +3,39 @@ import Navbar from "../components/Navbar";
 import NoteCard from "../components/NoteCard";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance";
 export default function Home() {
   const [openAddEditNotes, setOpenAddEditNotes] = useState({
     isShow: false,
     type: "add",
     data: null,
   });
+  const [userInfo, setUserInfo] = useState(null);
+  const navigate = useNavigate();
+  const getUserInfo = async () => {
+    try {
+      const res = await axiosInstance.get("/auth/api/get-users");
+      if (res.data && res.data.isUser) {
+        setUserInfo(res.data.isUser);
+      }
+    } catch (error) {
+      if (error.res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/signin");
+      }
+    }
+  };
+  useEffect(() => {
+    getUserInfo();
+    return () => {};
+  }, []);
+  console.log(userInfo);
   return (
     <>
-      <Navbar></Navbar>
-      <div className="container mx-auto px-6">
+      <Navbar userInfo={userInfo}></Navbar>
+      <div className="container px-6 mx-auto">
         <div className="grid grid-cols-3 gap-4 mt-8">
           <NoteCard
             title={"Meeting on Tuesday"}
@@ -30,7 +52,7 @@ export default function Home() {
         </div>
       </div>
       <button
-        className="w-14 h-14 flex items-center justify-center rounded-2xl bg-primary hover:bg-blue-600 absolute right-10 bottom-10"
+        className="absolute flex items-center justify-center w-14 h-14 rounded-2xl bg-primary hover:bg-blue-600 right-10 bottom-10"
         onClick={() => {
           setOpenAddEditNotes({ isShow: true, type: "add", data: null });
         }}
